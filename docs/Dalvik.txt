@@ -1,0 +1,49 @@
+
+一、Dalvik字节码的类型、方法与字段表示方法
+
+		Dalvik字节码有着一套自己的类型、方法与字段表示方式，这些方法与Dalvik虚拟机指令一起组成了一条条Dalvik汇编代码
+		
+	1、类型
+		Dalvik字节码只有两种类，基本类型与引用类型。Dalvik使用这两种类型来表示java语言的全部类型，除了对象与数组属于引用对象外，其他的java类型都是基本类型。类型描述符对照表如下：
+		----------------------------------------
+		语法			含义
+		----------------------------------------
+		V			void，只用于返回值类型
+		Z			boolean
+		B			byte
+		S			short
+		C			char
+		I			int
+		J			long
+		F			float
+		D			double
+		L			java类类型
+		[			数组类型
+		----------------------------------------
+		每个Dalvik寄存器都是32位大小，对于小于或等于32位长度的类型来说，一个寄存器就可以存放该类型的值，而像J、D等64位的类型，它们的值是使用相邻两个寄存器来存储的，如v0与v1、v3与v4等。
+		L类型可以表示java类型中的任何类。这些类在java代码中以 packagename.name.objectname 方式引用，到了Dalvik汇编代码中，它们以Lpackagename/name/objectname;形式表示，注意最后有个分号。L表示后面跟着一个java类，packagename/name表示对象所在的包，objectname表示对象的名称，最后的分号表示对象名结束。例如：Ljava/lang/String;相当于java.lang.String类。
+		[类型可以表示所有基本类型的数组。[后面紧跟基本类型描述符，如[I表示一个整数的一维数组，相当于java中的int[]。多个[在一起时可以用来表示多维数组，如[[I表示int[][]，[[[I表示int[][][]。注意多维数组的维数最大为255个。
+		
+		L与[可以同时使用来表示对象数组。如[Ljava/lang/String;就表示java中的字符串数组。
+
+
+	2、方法
+		
+		方法的表现形式比类名要复杂一些，Dalvik使用方法名、类型参数与返回值来详细描述一个方法。这样一方面有助于Dalvik虚拟机在运行时从方法表中快速的找到正确的方法；另一方面，Dalvik虚拟机也可以使用它们来做一些静态分析，比如Dalvik字节码的验证与优化。
+		
+			方法格式如下：
+			
+		Lpackagename/name/objectname;->methodname(III)Z
+		
+		在这个例子中，Lpackagename/name/objectname;应该理解为一个类型；methodname为具体的方法名；(III)表示方法的参数，为三个整型参数；Z表示方法的返回值为boolean。
+		
+		BakSmali生成的方法代码以.method指令开始，以.end method指令结束，根据方法类型的不同，在方法指令开始前可能会用"#"加以注释。如"# virtual methods"表示这是一个虚方法，"#direct methods"表示这是一个直接方法。
+	
+	
+	3、字段
+		
+		字段与方法很相似，只是字段没有方法的参数与返回值，取而代之的是字段的类型。格式如下：
+		Lpackagename/name/objectname;->fieldname:Ljava/lang/String;
+		字段由对象名（Lpackagename/name/objectname;）、字段名（fieldname）与字段类型（Ljava/lang/String;）组成，其中字段名与字段类型中间用冒号隔开。
+		
+		BakSmali生成的字段代码会以.field指令开头，根据字段类型的不同，在字段指令的开始会有注释，如"#instance fields"表示这是一个实例字段，"#static field"表示这是一个静态字段。
